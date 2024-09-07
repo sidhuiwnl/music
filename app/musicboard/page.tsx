@@ -1,9 +1,15 @@
-import StreamView from "@/components/StreamView"
+import StreamView from "@/components/StreamView";
+import { validateRequest } from "@/lib/auth";
 
-export default function MusicBoard(){
-    return(
-        <div className="h-screen w-screen">
-            <StreamView/>
-        </div>
-    )
+export default async function MusicBoard() {
+  const { user } = await validateRequest();
+  if (user) {
+    return (
+      <div className="h-screen w-screen">
+        <StreamView userId={user?.id} />
+      </div>
+    );
+  } else {
+    null;
+  }
 }
