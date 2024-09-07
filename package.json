@@ -25,7 +25,8 @@
     "redis": "^4.7.0",
     "tailwind-merge": "^2.5.2",
     "tailwindcss-animate": "^1.0.7",
-    "youtube-search-api": "^1.2.2"
+    "youtube-search-api": "^1.2.2",
+    "ytdl-core": "^4.11.5"
   },
   "devDependencies": {
     "@types/node": "^20",

@@ -21,3 +21,5 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ msg: 'Error while storing.' }, { status: 500 });
   }
 }
+
+

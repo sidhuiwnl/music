@@ -19,3 +19,22 @@ export async function youtubeStream({id,link} : {id : string , link : string}){
     const data = await response.json();
     return data;
 }
+
+
+export async function videoInfo({ link } : { link : string }){
+    const response = await fetch("/api/streaminfo",{
+        method : "POST",
+        headers : {
+            'Content-Type' : 'application/json'
+        },
+        body : JSON.stringify({
+            youtubeLink : link
+        })
+    })
+    if(!response.ok){
+        throw new Error('Failed to get youtube info');
+    }
+
+    const data = await response.json();
+    return data;
+}
