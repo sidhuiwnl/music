@@ -1,9 +1,9 @@
-
+import StreamView from "@/components/StreamView"
 
 export default function MusicBoard(){
     return(
-        <div>
-            <h1>Music board can as</h1>
+        <div className="h-screen w-screen">
+            <StreamView/>
         </div>
     )
 }
