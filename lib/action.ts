@@ -1,7 +1,12 @@
 
+interface StreamResponse {
+    msg: string;
+    streams: string[];
+}
+
 
 export async function youtubeStream({id,link} : {id : string , link : string}){
-    const response = await fetch("/api/streams",{
+    const response  = await fetch("/api/streams",{
         method : "POST",
         headers : {
             'Content-Type' : 'application/json'
@@ -16,25 +21,8 @@ export async function youtubeStream({id,link} : {id : string , link : string}){
         throw new Error('Failed to submit the YouTube link');
     }
 
-    const data = await response.json();
-    return data;
+    const responseData: StreamResponse = await response.json();
+    return responseData;
 }
 
 
-export async function videoInfo({ link } : { link : string }){
-    const response = await fetch("/api/streaminfo",{
-        method : "POST",
-        headers : {
-            'Content-Type' : 'application/json'
-        },
-        body : JSON.stringify({
-            youtubeLink : link
-        })
-    })
-    if(!response.ok){
-        throw new Error('Failed to get youtube info');
-    }
-
-    const data = await response.json();
-    return data;
-}
