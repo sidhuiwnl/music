@@ -8,7 +8,7 @@ import { useState, useEffect } from "react";
 import { Card, CardContent } from "./ui/card";
 import { YT_REGEX } from "@/lib/utils";
 import { Button } from "./ui/button";
-import {youtubeStream } from "@/lib/action";
+import {youtubeStream,getVideos } from "@/lib/action";
 import Image from "next/image";
 
 
@@ -29,7 +29,15 @@ export default function StreamView({ userId }: { userId: string }) {
   const [videoMetaDatas, setVideoMetaDatas] = useState<VideoMetaData[]>([]);
 
   
+   useEffect(() =>{
+    const userVideoDetails = async() =>{
+      const datas = await getVideos({id : userId})
+      
+      setVideoMetaDatas(datas.streams)
+    }
 
+    userVideoDetails()
+   },[userId])
 
   async function addtoRedis() {
     if (youtubeLink) {

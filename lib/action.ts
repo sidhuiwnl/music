@@ -5,6 +5,8 @@ interface StreamResponse {
 }
 
 
+
+
 export async function youtubeStream({id,link} : {id : string , link : string}){
     const response  = await fetch("/api/streams",{
         method : "POST",
@@ -25,4 +27,20 @@ export async function youtubeStream({id,link} : {id : string , link : string}){
     return responseData;
 }
 
+export async function getVideos( { id } : { id : string}){
+    const response = await fetch("/api/streaminfo",{
+        method : "POST",
+        headers : {
+            'Content-Type' : 'application/json'
+        },
+        body : JSON.stringify({
+            userId : id
+        })
+    })
 
+    if(!response.ok){
+        throw new Error('Failed to submit the get streams');
+    }
+
+    return response.json()
+}
