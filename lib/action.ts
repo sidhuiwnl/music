@@ -44,3 +44,22 @@ export async function getVideos( { id } : { id : string}){
 
     return response.json()
 }
+
+
+export async function deleteVideoFromQueue({id,link} : {id :string,link : string}){
+    const response = await fetch("/api/deleteVideo",{
+        method : "DELETE",
+        headers: { 'Content-Type': 'application/json' },
+        body : JSON.stringify({
+            userId : id,
+            youtubeLink  : link
+        })
+    })
+
+    if(!response.ok){
+        throw new Error('Failed to submit the get streams');
+    }
+
+    return response.json()
+
+}
