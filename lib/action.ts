@@ -14,6 +14,11 @@ export async function addToRedis({ id, youtubeLink }: { id: string, youtubeLink:
         throw new Error("Please sign-in for adding to playlist");
     }
 
+    const allKeys = await client.keys("streams:*");
+
+   
+    const userKey = `streams:${id}`;
+
     const info = await ytdl.getInfo(youtubeLink);
     const title  = info.videoDetails.title;
     const thumbnail = info.videoDetails.thumbnail.thumbnails[0].url;
@@ -28,27 +33,39 @@ export async function addToRedis({ id, youtubeLink }: { id: string, youtubeLink:
     await client.lPush(`streams:${id}`, JSON.stringify({
         youtubeLink,title,thumbnail
     }));
-}
 
-
-
-export async function getStreams({ id }: { id: string }) {
-   
-    const allKeys = await client.keys("streams:*");
-
-   
-    const userKey = `streams:${id}`;
-    
     if (allKeys.includes(userKey)) {
         
         const streams = await client.lRange(userKey, 0, -1);
         
         
-        return streams;
+        return streams.map(stream => JSON.parse(stream));
     } else {
         throw new Error("User not found or no streams available.");
     }
+
+
 }
+
+
+
+// export async function getStreams({ id }: { id: string }) {
+   
+//     const allKeys = await client.keys("streams:*");
+
+   
+//     const userKey = `streams:${id}`;
+    
+//     if (allKeys.includes(userKey)) {
+        
+//         const streams = await client.lRange(userKey, 0, -1);
+        
+        
+//         return streams.map(stream => JSON.parse(stream));
+//     } else {
+//         throw new Error("User not found or no streams available.");
+//     }
+// }
 
 // export async function youtubeStream({id,link} : {id : string , link : string}){
 //     const response  = await fetch("/api/streams",{

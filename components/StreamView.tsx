@@ -8,18 +8,18 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { Card, CardContent } from "./ui/card";
 import { YT_REGEX } from "@/lib/utils";
 import { Button } from "./ui/button";
-import { addToRedis,getStreams } from "@/lib/action";
+import { addToRedis } from "@/lib/action";
 import client from "@/lib/redis";
 import Image from "next/image";
 import { X, ChevronUp } from "lucide-react";
 import YouTubePlayer from "youtube-player";
 
-// interface VideoMetaData {
-//   userId: string;
-//   title: string;
-//   thumbnail: string;
-//   youtubeLink: string;
-// }
+interface VideoMetaData {
+  
+  title: string;
+  thumbnail: string;
+  youtubeLink: string;
+}
 
 interface YouTubePlayerInstance {
   loadVideoById: (videoId: string) => void;
@@ -30,8 +30,8 @@ interface YouTubePlayerInstance {
 
 export default function StreamView({ userId }: { userId: string }) {
   const [youtubeLink, setYoutubeLink] = useState<string | null>(null);
-  const [streams,setStreams] = useState("");
-  // const [videoMetaDatas, setVideoMetaDatas] = useState<VideoMetaData[]>([]);
+  
+  const [videoMetaDatas, setVideoMetaDatas] = useState<VideoMetaData[]>([]);
   // const [currentlyPlaying, setCurrentlyPlaying] = useState<VideoMetaData | null>(null);
   const [error, setError] = useState<string | null>(null);
   // const playerRef = useRef<HTMLDivElement>(null);
@@ -44,15 +44,12 @@ export default function StreamView({ userId }: { userId: string }) {
     }
     const result = await addToRedis({id : userId,youtubeLink : youtubeLink});
 
-    console.log(result)
+   setVideoMetaDatas(result)
 
     
   }
 
-  async function streamsget(){
-    const response = await getStreams({id : userId});
-    console.log(response)
-  }
+  
 
   
 
@@ -121,9 +118,7 @@ export default function StreamView({ userId }: { userId: string }) {
         <Button  onClick={addtolocalRedis} className="font-mono">
           Add to Queue
         </Button>
-        <Button  onClick={streamsget} className="font-mono">
-          streams
-        </Button>
+       
         {youtubeLink && (
           <Card className="bg-black w-full rounded-lg p-3 mt-5">
             <LiteYouTubeEmbed id={youtubeLink} title={youtubeLink} />
@@ -131,7 +126,7 @@ export default function StreamView({ userId }: { userId: string }) {
         )}
       </div>
 
-      {/* <div className="flex flex-col w-full md:w-auto p-4 space-y-2">
+       <div className="flex flex-col w-full md:w-auto p-4 space-y-2">
         <Label className="font-bold font-mono mb-5 text-xl">
           Upcoming Songs
         </Label>
@@ -152,7 +147,7 @@ export default function StreamView({ userId }: { userId: string }) {
                   />
                   <div className="flex flex-col space-y-2 items-start">
                     <h2 className="text-lg font-semibold">{videoMetaData.title}</h2>
-                    <div className="flex flex-row space-x-2">
+                    {/* <div className="flex flex-row space-x-2">
                       <Button 
                         onClick={() => handleDeleteFromQueue(videoMetaData)}
                         className="w-14"
@@ -164,7 +159,7 @@ export default function StreamView({ userId }: { userId: string }) {
                       <Button className="w-14" variant="secondary" aria-label="Move up in queue">
                         <ChevronUp />
                       </Button>
-                    </div>
+                    </div> */}
                   </div>
                 </CardContent>
               ) : null
@@ -174,7 +169,7 @@ export default function StreamView({ userId }: { userId: string }) {
           )}
         </Card>
       </div>
-      <div className="flex flex-col w-full md:w-auto p-4 space-y-2">
+      {/* <div className="flex flex-col w-full md:w-auto p-4 space-y-2">
         <Label className="font-bold font-mono mb-5 text-xl">
           Currently Playing
         </Label>
@@ -184,7 +179,7 @@ export default function StreamView({ userId }: { userId: string }) {
           </CardContent>
         </Card>
         <Button onClick={playNext}>Play Next</Button>
-      </div> */}
+      </div>  */}
 
       {error && (
         <div className="text-red-500 mt-2">
