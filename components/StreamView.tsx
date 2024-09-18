@@ -8,7 +8,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { Card, CardContent } from "./ui/card";
 import { YT_REGEX } from "@/lib/utils";
 import { Button } from "./ui/button";
-import { addToRedis } from "@/lib/action";
+import { addToRedis,displayAllVideo,deleteFromRedis } from "@/lib/action";
 import client from "@/lib/redis";
 import Image from "next/image";
 import { X, ChevronUp } from "lucide-react";
@@ -48,6 +48,15 @@ export default function StreamView({ userId }: { userId: string }) {
 
     
   }
+
+  useEffect(() =>{
+    async function fetchingAllVideoFirst(){
+      const existingLinks = await displayAllVideo(userId);
+      setVideoMetaDatas(existingLinks)
+    }
+
+    fetchingAllVideoFirst()
+  },[userId])
 
   
 
@@ -147,9 +156,9 @@ export default function StreamView({ userId }: { userId: string }) {
                   />
                   <div className="flex flex-col space-y-2 items-start">
                     <h2 className="text-lg font-semibold">{videoMetaData.title}</h2>
-                    {/* <div className="flex flex-row space-x-2">
+                    <div className="flex flex-row space-x-2">
                       <Button 
-                        onClick={() => handleDeleteFromQueue(videoMetaData)}
+                        onClick={() => deleteFromRedis({id : userId,youtubeLink : videoMetaData.youtubeLink})}
                         className="w-14"
                         variant="secondary"
                         aria-label="Remove from queue"
@@ -159,7 +168,7 @@ export default function StreamView({ userId }: { userId: string }) {
                       <Button className="w-14" variant="secondary" aria-label="Move up in queue">
                         <ChevronUp />
                       </Button>
-                    </div> */}
+                    </div>
                   </div>
                 </CardContent>
               ) : null
