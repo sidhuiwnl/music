@@ -4,10 +4,6 @@ import client from "./redis";
 import ytdl from 'ytdl-core';
 
 
-// interface StreamResponse {
-//     msg: string;
-//     streams: string[];
-// }
 
 
 
@@ -42,13 +38,11 @@ export async function addToRedis({ id, youtubeLink }: { id: string, youtubeLink:
     }));
 
     // Fetch and return the updated streams for the user
-    if (allKeys.includes(userKey)) {
-        const streams = await client.lRange(userKey, 0, -1);
-        return streams.map(stream => JSON.parse(stream));
-    } else {
-        throw new Error("User not found or no streams available.");
-    }
+    const streams = await client.lRange(userKey, 0, -1);
+    return streams.map(stream => JSON.parse(stream));
 }
+
+
 
 export async function deleteFromRedis({ id , youtubeLink } : {id : string,youtubeLink : string}) {
     const userKey = `streams:${id}`;
@@ -81,6 +75,9 @@ export async function deleteFromRedis({ id , youtubeLink } : {id : string,youtub
     
 }
 
+
+
+
 export async function displayAllVideo(id : string){
     const userKey = `streams:${id}`;
     const existingLinks = await client.lRange(userKey, 0, -1);
@@ -90,79 +87,17 @@ export async function displayAllVideo(id : string){
 }
 
 
-
-
-// export async function getStreams({ id }: { id: string }) {
-   
-//     const allKeys = await client.keys("streams:*");
-
-   
-//     const userKey = `streams:${id}`;
+export async function deleteTopVideoFromRedis(id  : string){
+    const userKey = `streams:${id}`;
     
-//     if (allKeys.includes(userKey)) {
-        
-//         const streams = await client.lRange(userKey, 0, -1);
-        
-        
-//         return streams.map(stream => JSON.parse(stream));
-//     } else {
-//         throw new Error("User not found or no streams available.");
-//     }
-// }
 
-// export async function youtubeStream({id,link} : {id : string , link : string}){
-//     const response  = await fetch("/api/streams",{
-//         method : "POST",
-//         headers : {
-//             'Content-Type' : 'application/json'
-//         },
-//         body : JSON.stringify({
-//             youtubeLink : link,
-//             userId : id
-//         })
-//     })
+    const deleteTopValue = await client.lPop(userKey);
 
-//     if(!response.ok){
-//         throw new Error('Failed to submit the YouTube link');
-//     }
+    if(deleteTopValue){
+        const topDeletedQueues =  await client.lRange(userKey,0,-1);
 
-//     const responseData: StreamResponse = await response.json();
-//     return responseData;
-// }
-
-// export async function getVideos( { id } : { id : string}){
-//     const response = await fetch("/api/streaminfo",{
-//         method : "POST",
-//         headers : {
-//             'Content-Type' : 'application/json'
-//         },
-//         body : JSON.stringify({
-//             userId : id
-//         })
-//     })
-
-//     if(!response.ok){
-//         throw new Error('Failed to submit the get streams');
-//     }
-
-//     return response.json()
-// }
-
-
-// export async function deleteVideoFromQueue({id,link} : {id :string,link : string}){
-//     const response = await fetch("/api/deleteVideo",{
-//         method : "DELETE",
-//         headers: { 'Content-Type': 'application/json' },
-//         body : JSON.stringify({
-//             userId : id,
-//             youtubeLink  : link
-//         })
-//     })
-
-//     if(!response.ok){
-//         throw new Error('Failed to submit the get streams');
-//     }
-
-//     return response.json()
-
-// }
+        return topDeletedQueues.map(topDeletedQueue => JSON.parse(topDeletedQueue))
+    }else{
+        console.log("empty queue")
+    }
+}
