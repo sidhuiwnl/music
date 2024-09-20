@@ -13,6 +13,8 @@ import {
   displayAllVideo,
   deleteFromRedis,
   deleteTopVideoFromRedis,
+  storeCurrentPlaying,
+  getCurrentPlaying,
 } from "@/lib/action";
 
 import Image from "next/image";
@@ -53,11 +55,11 @@ export default function StreamView({ userId }: { userId: string }) {
       if (result.length > 0) {
         if (!currentlyPlaying) {
           setCurrentlyPlaying(result[0]);
-
+         
           const finalStream = await deleteTopVideoFromRedis(userId);
           setVideoMetaDatas(finalStream);
         } else {
-          setVideoMetaDatas((prevVideos) => [...prevVideos, ...result]);
+          setVideoMetaDatas((prevVideos) => [ ...result]);
         }
       }
 
@@ -71,10 +73,16 @@ export default function StreamView({ userId }: { userId: string }) {
     async function fetchingAllVideoFirst() {
       const existingLinks = await displayAllVideo(userId);
       setVideoMetaDatas(existingLinks);
+
+      
     }
+
+
 
     fetchingAllVideoFirst();
   }, [userId]);
+
+
 
   useEffect(() => {
     if (currentlyPlaying && playerRef.current) {
@@ -87,6 +95,8 @@ export default function StreamView({ userId }: { userId: string }) {
       const player = playerInstanceRef.current;
       player.loadVideoById(currentlyPlaying.youtubeLink);
       player.playVideo();
+
+     
 
       const handleVideoStateChange = (event : { data : number }) => {
         if(event.data === 0){
@@ -103,7 +113,9 @@ export default function StreamView({ userId }: { userId: string }) {
     }
   }, [currentlyPlaying]);
 
-  const playNext =  async() =>{
+
+
+  const playNext = async() =>{
     if(videoMetaDatas.length > 0){
       const nextVideo = videoMetaDatas[0];
       setCurrentlyPlaying(nextVideo);
@@ -214,6 +226,7 @@ export default function StreamView({ userId }: { userId: string }) {
         </Card>
         <Button onClick={playNext}>Play Next</Button>
       </div>
+      
 
       {error && <div className="text-red-500 mt-2">{error}</div>}
     </div>

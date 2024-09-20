@@ -101,3 +101,26 @@ export async function deleteTopVideoFromRedis(id  : string){
         console.log("empty queue")
     }
 }
+
+
+export async function storeCurrentPlaying({ id,youtubeLink } : { id : string, youtubeLink : string }){
+    
+    const userKey = `currentPlaying:${id}`;
+
+     await client.set(userKey,JSON.stringify({
+        youtubeLink
+    }))
+
+}
+
+export async function getCurrentPlaying(id : string){
+    const userKey = `currentPlaying:${id}`;
+
+    const currentPlayedVideo = await client.get(userKey);
+
+    if (currentPlayedVideo) {
+        return JSON.parse(currentPlayedVideo);
+    }
+
+    return null; 
+}
