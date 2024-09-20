@@ -14,7 +14,7 @@ import {
   deleteFromRedis,
   deleteTopVideoFromRedis,
 } from "@/lib/action";
-import client from "@/lib/redis";
+
 import Image from "next/image";
 import { X, ChevronUp } from "lucide-react";
 import YouTubePlayer from "youtube-player";
@@ -87,55 +87,33 @@ export default function StreamView({ userId }: { userId: string }) {
       const player = playerInstanceRef.current;
       player.loadVideoById(currentlyPlaying.youtubeLink);
       player.playVideo();
+
+      const handleVideoStateChange = (event : { data : number }) => {
+        if(event.data === 0){
+          playNext();
+        }
+      }
+      player.on("stateChange", handleVideoStateChange);
+
+      return () => {
+               player.destroy();
+               playerInstanceRef.current = null;
+      };
+
     }
   }, [currentlyPlaying]);
 
-  // const playNext = useCallback(() => {
-  //   if (videoMetaDatas.length > 0) {
-  //     const nextVideo = videoMetaDatas[0];
-  //     setCurrentlyPlaying(nextVideo);
-  //     setVideoMetaDatas(prevVideos => prevVideos.slice(1));
-  //   } else {
-  //     setCurrentlyPlaying(null);
-  //   }
-  // }, [videoMetaDatas]);
+  const playNext =  async() =>{
+    if(videoMetaDatas.length > 0){
+      const nextVideo = videoMetaDatas[0];
+      setCurrentlyPlaying(nextVideo);
+      await deleteTopVideoFromRedis(userId);
+    }else{
+      setCurrentlyPlaying(null)
+    }
+  }
 
-  // useEffect(() => {
-  //   if (currentlyPlaying && playerRef.current) {
-  //     if (!playerInstanceRef.current) {
-  //       playerInstanceRef.current = YouTubePlayer(playerRef.current) as YouTubePlayerInstance;
-  //     }
-
-  //     const player = playerInstanceRef.current;
-  //     player.loadVideoById(currentlyPlaying.youtubeLink);
-  //     player.playVideo();
-
-  //     const handleVideoStateChange = (event: { data: number }) => {
-  //       if (event.data === 0) { // Video ended
-  //         playNext();
-  //       }
-  //     };
-
-  //     player.on("stateChange", handleVideoStateChange);
-
-  //     return () => {
-  //       player.destroy();
-  //       playerInstanceRef.current = null;
-  //     };
-  //   }
-  // }, [currentlyPlaying, playNext]);
-
-  // const handleDeleteFromQueue = useCallback(async (video: VideoMetaData) => {
-  //   try {
-  //     await deleteVideoFromQueue({ id: userId, link: video.youtubeLink });
-  //     setVideoMetaDatas(prevVideos =>
-  //       prevVideos.filter(prevVideo => prevVideo.youtubeLink !== video.youtubeLink)
-  //     );
-  //   } catch (error) {
-  //     console.error("Error deleting video:", error);
-  //     setError("Failed to delete video from queue. Please try again.");
-  //   }
-  // }, [userId]);
+ 
 
   return (
     <div className="flex flex-col md:flex-row p-4 space-y-4 md:space-y-0 md:space-x-4">
@@ -234,7 +212,7 @@ export default function StreamView({ userId }: { userId: string }) {
             <div ref={playerRef}></div>
           </CardContent>
         </Card>
-        <Button>Play Next</Button>
+        <Button onClick={playNext}>Play Next</Button>
       </div>
 
       {error && <div className="text-red-500 mt-2">{error}</div>}
