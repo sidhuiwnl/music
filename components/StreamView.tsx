@@ -13,8 +13,7 @@ import {
   displayAllVideo,
   deleteFromRedis,
   deleteTopVideoFromRedis,
-  storeCurrentPlaying,
-  getCurrentPlaying,
+  upVoteVideo
 } from "@/lib/action";
 
 import Image from "next/image";
@@ -25,6 +24,7 @@ interface VideoMetaData {
   title: string;
   thumbnail: string;
   youtubeLink: string;
+  upvotes : number
 }
 
 interface YouTubePlayerInstance {
@@ -59,7 +59,7 @@ export default function StreamView({ userId }: { userId: string }) {
           const finalStream = await deleteTopVideoFromRedis(userId);
           setVideoMetaDatas(finalStream);
         } else {
-          setVideoMetaDatas((prevVideos) => [ ...result]);
+          setVideoMetaDatas([ ...result]);
         }
       }
 
@@ -69,6 +69,9 @@ export default function StreamView({ userId }: { userId: string }) {
     }
   }
 
+  
+
+  
   useEffect(() => {
     async function fetchingAllVideoFirst() {
       const existingLinks = await displayAllVideo(userId);
@@ -82,7 +85,7 @@ export default function StreamView({ userId }: { userId: string }) {
     fetchingAllVideoFirst();
   }, [userId]);
 
-
+  
 
   useEffect(() => {
     if (currentlyPlaying && playerRef.current) {
@@ -117,9 +120,16 @@ export default function StreamView({ userId }: { userId: string }) {
 
   const playNext = async() =>{
     if(videoMetaDatas.length > 0){
-      const nextVideo = videoMetaDatas[0];
+      const sortedVideos = [...videoMetaDatas].sort((a, b) => b.upvotes - a.upvotes);
+
+      const nextVideo = sortedVideos[0];
+      
       setCurrentlyPlaying(nextVideo);
-      await deleteTopVideoFromRedis(userId);
+
+      const updatedQueue = await deleteTopVideoFromRedis(userId);
+      
+      setVideoMetaDatas(updatedQueue);
+
     }else{
       setCurrentlyPlaying(null)
     }
@@ -182,6 +192,7 @@ export default function StreamView({ userId }: { userId: string }) {
                     <h2 className="text-lg font-semibold">
                       {videoMetaData.title}
                     </h2>
+                    <p className="text-sm t text-white">Upvotes: {videoMetaData.upvotes}</p>
                     <div className="flex flex-row space-x-2">
                       <Button
                         onClick={() =>
@@ -200,9 +211,15 @@ export default function StreamView({ userId }: { userId: string }) {
                         className="w-14"
                         variant="secondary"
                         aria-label="Move up in queue"
+                        onClick={ async() =>{
+                          const updatedVideos = await upVoteVideo(userId, videoMetaData.youtubeLink);
+                          setVideoMetaDatas(updatedVideos);
+                        }}
                       >
                         <ChevronUp />
+                        
                       </Button>
+                      
                     </div>
                   </div>
                 </CardContent>

@@ -14,7 +14,7 @@ export async function addToRedis({ id, youtubeLink }: { id: string, youtubeLink:
     }
 
     const userKey = `streams:${id}`;
-    const allKeys = await client.keys("streams:*");
+    
 
     // Fetch video metadata
     const info = await ytdl.getInfo(youtubeLink);
@@ -34,12 +34,14 @@ export async function addToRedis({ id, youtubeLink }: { id: string, youtubeLink:
 
     // If no duplicate found, add the new link as a JSON string
     await client.lPush(userKey, JSON.stringify({
-        youtubeLink, title, thumbnail
+        youtubeLink, title, thumbnail, upvotes: 0,
     }));
 
     // Fetch and return the updated streams for the user
     const streams = await client.lRange(userKey, 0, -1);
-    return streams.map(stream => JSON.parse(stream));
+    return streams
+    .map(stream => JSON.parse(stream))
+    .sort((a,b) => b.upvotes - a.upvotes)
 }
 
 
@@ -82,45 +84,93 @@ export async function displayAllVideo(id : string){
     const userKey = `streams:${id}`;
     const existingLinks = await client.lRange(userKey, 0, -1);
 
-    return existingLinks.map(existingLink => JSON.parse(existingLink))
-
+    return existingLinks
+    .map(existingLink => JSON.parse(existingLink))
+    .sort((a,b) => b.upvotes - a.upvotes)
 }
 
-
-export async function deleteTopVideoFromRedis(id  : string){
+export async function deleteTopVideoFromRedis(id: string) {
     const userKey = `streams:${id}`;
+
+    // Fetch all videos
+    const videoList = await client.lRange(userKey, 0, -1);
     
+    if (videoList.length > 0) {
+        // Parse and sort the videos based on upvotes in descending order
+        const sortedVideos = videoList
+            .map(video => JSON.parse(video))
+            .sort((a, b) => b.upvotes - a.upvotes);
 
-    const deleteTopValue = await client.lPop(userKey);
+        // The video with the most upvotes (first one in the sorted list)
+        const topVideo = sortedVideos[0];
 
-    if(deleteTopValue){
-        const topDeletedQueues =  await client.lRange(userKey,0,-1);
+        // Remove the video with the most upvotes from Redis
+        await client.lRem(userKey, 0, JSON.stringify(topVideo));
 
-        return topDeletedQueues.map(topDeletedQueue => JSON.parse(topDeletedQueue))
-    }else{
-        console.log("empty queue")
+        // Fetch the remaining videos and return them
+        const remainingVideos = await client.lRange(userKey, 0, -1);
+        return remainingVideos.map(video => JSON.parse(video));
+    } else {
+        console.log("empty queue");
+        return [];
     }
 }
 
 
-export async function storeCurrentPlaying({ id,youtubeLink } : { id : string, youtubeLink : string }){
+// export async function storeCurrentPlaying({ id,youtubeLink } : { id : string, youtubeLink : string }){
     
-    const userKey = `currentPlaying:${id}`;
+//     const userKey = `currentPlaying:${id}`;
 
-     await client.set(userKey,JSON.stringify({
-        youtubeLink
-    }))
+//      await client.set(userKey,JSON.stringify({
+//         youtubeLink
+//     }))
 
-}
+// }
 
-export async function getCurrentPlaying(id : string){
-    const userKey = `currentPlaying:${id}`;
+// export async function getCurrentPlaying(id : string){
+//     const userKey = `currentPlaying:${id}`;
 
-    const currentPlayedVideo = await client.get(userKey);
+//     const currentPlayedVideo = await client.get(userKey);
 
-    if (currentPlayedVideo) {
-        return JSON.parse(currentPlayedVideo);
+//     if (currentPlayedVideo) {
+//         return JSON.parse(currentPlayedVideo);
+//     }
+
+//     return null; 
+// }
+
+
+export async function upVoteVideo(id : string,youtubeLink : string){
+
+    const userKey =  `streams:${id}`;
+
+    const videoList = await client.lRange(userKey,0,-1);
+
+    const updatedList = videoList.map((video) =>{
+        const videoData = JSON.parse(video);
+
+        if(videoData.youtubeLink === youtubeLink){
+            videoData.upvotes = (videoData.upvotes || 0) + 1;
+
+        }
+
+        return JSON.stringify(videoData);
+    })
+
+    await client.del(userKey);
+    
+    for(const item of updatedList){
+        await client.rPush(userKey,item)
     }
 
-    return null; 
+
+    const sortedList = updatedList
+        .map((video) => JSON.parse(video))
+        .sort((a,b) => b.upvotes - a.upvotes);
+
+    return sortedList
+
+
+
+
 }
