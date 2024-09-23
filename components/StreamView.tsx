@@ -4,7 +4,7 @@ import LiteYouTubeEmbed from "react-lite-youtube-embed";
 import "react-lite-youtube-embed/dist/LiteYouTubeEmbed.css";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Card, CardContent } from "./ui/card";
 import { YT_REGEX } from "@/lib/utils";
 import { Button } from "./ui/button";
@@ -13,18 +13,18 @@ import {
   displayAllVideo,
   deleteFromRedis,
   deleteTopVideoFromRedis,
-  upVoteVideo
+  upVoteVideo,
 } from "@/lib/action";
 
 import Image from "next/image";
-import { X, ChevronUp } from "lucide-react";
+import { X, ChevronUp, Search, Music } from "lucide-react";
 import YouTubePlayer from "youtube-player";
 
 interface VideoMetaData {
   title: string;
   thumbnail: string;
   youtubeLink: string;
-  upvotes : number
+  upvotes: number;
 }
 
 interface YouTubePlayerInstance {
@@ -35,7 +35,6 @@ interface YouTubePlayerInstance {
 }
 
 export default function StreamView({ userId }: { userId: string }) {
-  
   const [youtubeLink, setYoutubeLink] = useState<string | null>(null);
 
   const [videoMetaDatas, setVideoMetaDatas] = useState<VideoMetaData[]>([]);
@@ -56,11 +55,11 @@ export default function StreamView({ userId }: { userId: string }) {
       if (result.length > 0) {
         if (!currentlyPlaying) {
           setCurrentlyPlaying(result[0]);
-         
+
           const finalStream = await deleteTopVideoFromRedis(userId);
           setVideoMetaDatas(finalStream);
         } else {
-          setVideoMetaDatas([ ...result]);
+          setVideoMetaDatas([...result]);
         }
       }
 
@@ -70,23 +69,14 @@ export default function StreamView({ userId }: { userId: string }) {
     }
   }
 
-  
-
-  
   useEffect(() => {
     async function fetchingAllVideoFirst() {
       const existingLinks = await displayAllVideo(userId);
       setVideoMetaDatas(existingLinks);
-
-      
     }
-
-
 
     fetchingAllVideoFirst();
   }, [userId]);
-
-  
 
   useEffect(() => {
     if (currentlyPlaying && playerRef.current) {
@@ -100,73 +90,91 @@ export default function StreamView({ userId }: { userId: string }) {
       player.loadVideoById(currentlyPlaying.youtubeLink);
       player.playVideo();
 
-     
-
-      const handleVideoStateChange = (event : { data : number }) => {
-        if(event.data === 0){
+      const handleVideoStateChange = (event: { data: number }) => {
+        if (event.data === 0) {
           playNext();
         }
-      }
+      };
       player.on("stateChange", handleVideoStateChange);
 
       return () => {
-               player.destroy();
-               playerInstanceRef.current = null;
+        player.destroy();
+        playerInstanceRef.current = null;
       };
-
     }
   }, [currentlyPlaying]);
 
-
-
-  const playNext = async() =>{
-    if(videoMetaDatas.length > 0){
-      const sortedVideos = [...videoMetaDatas].sort((a, b) => b.upvotes - a.upvotes);
+  const playNext = async () => {
+    if (videoMetaDatas.length > 0) {
+      const sortedVideos = [...videoMetaDatas].sort(
+        (a, b) => b.upvotes - a.upvotes
+      );
 
       const nextVideo = sortedVideos[0];
-      
+
       setCurrentlyPlaying(nextVideo);
 
       const updatedQueue = await deleteTopVideoFromRedis(userId);
-      
+
       setVideoMetaDatas(updatedQueue);
-
-    }else{
-      setCurrentlyPlaying(null)
+    } else {
+      setCurrentlyPlaying(null);
     }
-  }
+  };
 
- 
+  const handleInputChange = (e) => {
+    const input = e.target.value;
+    const videoId = input.match(
+      /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com|youtu\.be)\/(?:watch\?v=)?(.+)/
+    );
+    if (videoId) {
+      setYoutubeLink(videoId[1]);
+    } else {
+      setYoutubeLink("");
+    }
+  };
 
   return (
     <div className="flex flex-col md:flex-row p-4 space-y-4 md:space-y-0 md:space-x-4">
-      <div className="flex flex-col w-full md:w-[435px] p-4 space-y-2">
-        <Label
-          htmlFor="youtube-link"
-          className="font-bold font-mono mb-5 text-xl"
-        >
-          Add Your Favourite Song to be Played
-        </Label>
-        <Input
-          id="youtube-link"
-          onChange={(e) => {
-            const videoId = e.target.value.match(YT_REGEX);
-            videoId ? setYoutubeLink(videoId[1]) : setYoutubeLink(null);
-          }}
-        />
-        <Button onClick={addtolocalRedis} className="font-mono">
-          Add to Queue
-        </Button>
+      <div className="flex flex-col w-full max-w-[400px] bg-zinc-900 text-white p-4 rounded-lg">
+        <div className="relative mb-2">
+          <input
+            type="text"
+            placeholder="https://www.youtube.com/watch"
+            onChange={handleInputChange}
+            className="w-full bg-zinc-800 text-white placeholder-zinc-600 py-2 px-4 pr-10 rounded-md focus:outline-none focus:ring-1 focus:ring-zinc-700"
+          />
+          <Search
+            className="absolute right-3 top-1/2 transform -translate-y-1/2 text-zinc-600"
+            size={18}
+          />
+        </div>
 
-        {youtubeLink && (
-          <Card className="bg-black w-full rounded-lg p-3 mt-5">
-            <LiteYouTubeEmbed id={youtubeLink} title={youtubeLink} />
-          </Card>
-        )}
+        <div className="bg-zinc-800 h-60 rounded-md flex items-center justify-center mb-2 overflow-hidden">
+          {youtubeLink ? (
+            <iframe
+              width="100%"
+              height="100%"
+              src={`https://www.youtube.com/embed/${youtubeLink}`}
+              title="YouTube video player"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowFullScreen
+            ></iframe>
+          ) : (
+            <div className="text-center">
+              <Music className="mx-auto mb-2 text-zinc-700" size={24} />
+              <p className="text-zinc-700 text-sm">No video Added</p>
+            </div>
+          )}
+        </div>
+
+        <button className="bg-white text-black font-bold py-2 px-4 rounded-md hover:bg-zinc-200 transition-colors">
+          Add to queue
+        </button>
       </div>
 
       <div className="flex flex-col w-full md:w-auto p-4 space-y-2">
-        <Label className="font-bold font-mono mb-5 text-xl">
+        {/* <Label className="font-bold font-mono mb-5 text-xl">
           Upcoming Songs
         </Label>
         <Card className="flex flex-col space-y-4 p-4 w-full md:min-w-[400px] min-h-[100px] bg-gray-900 border-gray-800 text-white">
@@ -231,9 +239,9 @@ export default function StreamView({ userId }: { userId: string }) {
               <p className="text-white">No upcoming songs in the queue</p>
             </CardContent>
           )}
-        </Card>
+        </Card> */}
       </div>
-      <div className="flex flex-col w-full md:w-auto p-4 space-y-2">
+      {/* <div className="flex flex-col w-full md:w-auto p-4 space-y-2">
         <Label className="font-bold font-mono mb-5 text-xl">
           Currently Playing
         </Label>
@@ -243,8 +251,7 @@ export default function StreamView({ userId }: { userId: string }) {
           </CardContent>
         </Card>
         <Button onClick={playNext}>Play Next</Button>
-      </div>
-      
+      </div> */}
 
       {error && <div className="text-red-500 mt-2">{error}</div>}
     </div>
