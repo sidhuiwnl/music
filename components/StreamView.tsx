@@ -35,6 +35,7 @@ interface YouTubePlayerInstance {
 }
 
 export default function StreamView({ userId }: { userId: string }) {
+  
   const [youtubeLink, setYoutubeLink] = useState<string | null>(null);
 
   const [videoMetaDatas, setVideoMetaDatas] = useState<VideoMetaData[]>([]);

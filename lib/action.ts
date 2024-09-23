@@ -1,176 +1,139 @@
-"use server"
+"use server";
 
 import client from "./redis";
-import ytdl from 'ytdl-core';
+import ytdl from "ytdl-core";
 
+export async function addToRedis({
+  id,
+  youtubeLink,
+}: {
+  id: string;
+  youtubeLink: string;
+}) {
+  if (!id) {
+    throw new Error("Please sign-in for adding to playlist");
+  }
 
+  const userKey = `streams:${id}`;
 
+  const info = await ytdl.getInfo(youtubeLink);
+  const title = info.videoDetails.title;
+  const thumbnail = info.videoDetails.thumbnail.thumbnails[0].url;
 
+  const existingLinks = await client.lRange(userKey, 0, -1);
 
-
-export async function addToRedis({ id, youtubeLink }: { id: string, youtubeLink: string }) {
-    if (!id) {
-        throw new Error("Please sign-in for adding to playlist");
+  for (const stream of existingLinks) {
+    const parsedStream = JSON.parse(stream);
+    if (parsedStream.youtubeLink === youtubeLink) {
+      throw new Error("This YouTube link has already been added.");
     }
+  }
 
-    const userKey = `streams:${id}`;
-    
+  await client.lPush(
+    userKey,
+    JSON.stringify({
+      youtubeLink,
+      title,
+      thumbnail,
+      upvotes: 0,
+    })
+  );
 
-    // Fetch video metadata
-    const info = await ytdl.getInfo(youtubeLink);
-    const title = info.videoDetails.title;
-    const thumbnail = info.videoDetails.thumbnail.thumbnails[0].url;
-
-    // Fetch existing YouTube links for the user
-    const existingLinks = await client.lRange(userKey, 0, -1);
-
-    // Check if the YouTube link already exists by parsing stored JSON
-    for (const stream of existingLinks) {
-        const parsedStream = JSON.parse(stream);
-        if (parsedStream.youtubeLink === youtubeLink) {
-            throw new Error("This YouTube link has already been added.");
-        }
-    }
-
-    // If no duplicate found, add the new link as a JSON string
-    await client.lPush(userKey, JSON.stringify({
-        youtubeLink, title, thumbnail, upvotes: 0,
-    }));
-
-    // Fetch and return the updated streams for the user
-    const streams = await client.lRange(userKey, 0, -1);
-    return streams
-    .map(stream => JSON.parse(stream))
-    .sort((a,b) => b.upvotes - a.upvotes)
+  const streams = await client.lRange(userKey, 0, -1);
+  return streams
+    .map((stream) => JSON.parse(stream))
+    .sort((a, b) => b.upvotes - a.upvotes);
 }
 
+export async function deleteFromRedis({
+  id,
+  youtubeLink,
+}: {
+  id: string;
+  youtubeLink: string;
+}) {
+  const userKey = `streams:${id}`;
 
+  const existingLinks = await client.lRange(userKey, 0, -1);
 
-export async function deleteFromRedis({ id , youtubeLink } : {id : string,youtubeLink : string}) {
-    const userKey = `streams:${id}`;
+  let found = false;
 
-    const existingLinks = await client.lRange(userKey,0,-1);
-    
-    let found = false;
+  for (const item of existingLinks) {
+    try {
+      const parsedItem = JSON.parse(item);
 
-    for( const item of existingLinks){
-        try {
-            const parsedItem = JSON.parse(item);
-
-            if(parsedItem.youtubeLink === youtubeLink){
-                await client.lRem(userKey,0,item);
-                console.log(`Removed ${youtubeLink} from ${userKey}`);
-                found = true;
-                break;
-            }
-        } catch (error) {
-            console.error(`Error parsing JSON: ${error}`);
-        }
-
-
+      if (parsedItem.youtubeLink === youtubeLink) {
+        await client.lRem(userKey, 0, item);
+        console.log(`Removed ${youtubeLink} from ${userKey}`);
+        found = true;
+        break;
+      }
+    } catch (error) {
+      console.error(`Error parsing JSON: ${error}`);
     }
-    if (!found) {
-        console.log(`${youtubeLink} not found in ${userKey}`);
-    }
+  }
+  if (!found) {
+    console.log(`${youtubeLink} not found in ${userKey}`);
+  }
 
-    return found;
-    
+  return found;
 }
 
+export async function displayAllVideo(id: string) {
+  const userKey = `streams:${id}`;
+  const existingLinks = await client.lRange(userKey, 0, -1);
 
-
-
-export async function displayAllVideo(id : string){
-    const userKey = `streams:${id}`;
-    const existingLinks = await client.lRange(userKey, 0, -1);
-
-    return existingLinks
-    .map(existingLink => JSON.parse(existingLink))
-    .sort((a,b) => b.upvotes - a.upvotes)
+  return existingLinks
+    .map((existingLink) => JSON.parse(existingLink))
+    .sort((a, b) => b.upvotes - a.upvotes);
 }
 
 export async function deleteTopVideoFromRedis(id: string) {
-    const userKey = `streams:${id}`;
+  const userKey = `streams:${id}`;
 
-    // Fetch all videos
-    const videoList = await client.lRange(userKey, 0, -1);
-    
-    if (videoList.length > 0) {
-        // Parse and sort the videos based on upvotes in descending order
-        const sortedVideos = videoList
-            .map(video => JSON.parse(video))
-            .sort((a, b) => b.upvotes - a.upvotes);
+  const videoList = await client.lRange(userKey, 0, -1);
 
-        // The video with the most upvotes (first one in the sorted list)
-        const topVideo = sortedVideos[0];
+  if (videoList.length > 0) {
+    const sortedVideos = videoList
+      .map((video) => JSON.parse(video))
+      .sort((a, b) => b.upvotes - a.upvotes);
 
-        // Remove the video with the most upvotes from Redis
-        await client.lRem(userKey, 0, JSON.stringify(topVideo));
+    const topVideo = sortedVideos[0];
 
-        // Fetch the remaining videos and return them
-        const remainingVideos = await client.lRange(userKey, 0, -1);
-        return remainingVideos.map(video => JSON.parse(video));
-    } else {
-        console.log("empty queue");
-        return [];
-    }
+    await client.lRem(userKey, 0, JSON.stringify(topVideo));
+
+    const remainingVideos = await client.lRange(userKey, 0, -1);
+    return remainingVideos.map((video) => JSON.parse(video));
+  } else {
+    console.log("empty queue");
+    return [];
+  }
 }
 
+export async function upVoteVideo(id: string, youtubeLink: string) {
+  const userKey = `streams:${id}`;
 
-// export async function storeCurrentPlaying({ id,youtubeLink } : { id : string, youtubeLink : string }){
-    
-//     const userKey = `currentPlaying:${id}`;
+  const videoList = await client.lRange(userKey, 0, -1);
 
-//      await client.set(userKey,JSON.stringify({
-//         youtubeLink
-//     }))
+  const updatedList = videoList.map((video) => {
+    const videoData = JSON.parse(video);
 
-// }
-
-// export async function getCurrentPlaying(id : string){
-//     const userKey = `currentPlaying:${id}`;
-
-//     const currentPlayedVideo = await client.get(userKey);
-
-//     if (currentPlayedVideo) {
-//         return JSON.parse(currentPlayedVideo);
-//     }
-
-//     return null; 
-// }
-
-
-export async function upVoteVideo(id : string,youtubeLink : string){
-
-    const userKey =  `streams:${id}`;
-
-    const videoList = await client.lRange(userKey,0,-1);
-
-    const updatedList = videoList.map((video) =>{
-        const videoData = JSON.parse(video);
-
-        if(videoData.youtubeLink === youtubeLink){
-            videoData.upvotes = (videoData.upvotes || 0) + 1;
-
-        }
-
-        return JSON.stringify(videoData);
-    })
-
-    await client.del(userKey);
-    
-    for(const item of updatedList){
-        await client.rPush(userKey,item)
+    if (videoData.youtubeLink === youtubeLink) {
+      videoData.upvotes = (videoData.upvotes || 0) + 1;
     }
 
+    return JSON.stringify(videoData);
+  });
 
-    const sortedList = updatedList
-        .map((video) => JSON.parse(video))
-        .sort((a,b) => b.upvotes - a.upvotes);
+  await client.del(userKey);
 
-    return sortedList
+  for (const item of updatedList) {
+    await client.rPush(userKey, item);
+  }
 
+  const sortedList = updatedList
+    .map((video) => JSON.parse(video))
+    .sort((a, b) => b.upvotes - a.upvotes);
 
-
-
+  return sortedList;
 }
