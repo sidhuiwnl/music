@@ -135,8 +135,9 @@ export default function StreamView({ userId }: { userId: string }) {
   };
 
   return (
-    <div className="flex flex-col md:flex-row p-4 space-y-4 md:space-y-0 md:space-x-4">
-      <div className="flex flex-col w-full max-w-[400px] bg-zinc-900 text-white p-4 rounded-lg">
+    <>
+      <div className="flex flex-col md:flex-row p-4 space-y-4 md:space-y-0 md:space-x-4">
+      <div className="flex flex-col  w-[400px] h-[400px] bg-zinc-900 text-white p-4 rounded-lg">
         <div className="relative mb-2">
           <input
             type="text"
@@ -152,14 +153,16 @@ export default function StreamView({ userId }: { userId: string }) {
 
         <div className="bg-zinc-800 h-60 rounded-md flex items-center justify-center mb-2 overflow-hidden">
           {youtubeLink ? (
-            <iframe
-              width="100%"
-              height="100%"
-              src={`https://www.youtube.com/embed/${youtubeLink}`}
-              title="YouTube video player"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-              allowFullScreen
-            ></iframe>
+            <div className="relative w-full h-full">
+              <iframe
+                className="w-full h-full"
+                src={`https://www.youtube.com/embed/${youtubeLink}`}
+                title="YouTube video player"
+                allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+              ></iframe>
+              <div className="absolute inset-0 bg-transparent z-10"></div>
+            </div>
           ) : (
             <div className="text-center">
               <Music className="mx-auto mb-2 text-zinc-700" size={24} />
@@ -168,41 +171,47 @@ export default function StreamView({ userId }: { userId: string }) {
           )}
         </div>
 
-        <button className="bg-white text-black font-bold py-2 px-4 rounded-md hover:bg-zinc-200 transition-colors">
+        <button
+          onClick={addtolocalRedis}
+          className="bg-white text-black font-bold py-2 px-4 rounded-md hover:bg-zinc-200 transition-colors"
+        >
           Add to queue
         </button>
       </div>
-
-      <div className="flex flex-col w-full md:w-auto p-4 space-y-2">
-        {/* <Label className="font-bold font-mono mb-5 text-xl">
-          Upcoming Songs
+      <div className="flex flex-col w-full min-w-[400px] max-h-[400px] bg-gradient-to-br from-zinc-800 to-zinc-900 text-white p-6 rounded-xl shadow-lg">
+        <Label className="font-bold font-mono mb-6 text-2xl tracking-wider">
+          Queue Songs
         </Label>
-        <Card className="flex flex-col space-y-4 p-4 w-full md:min-w-[400px] min-h-[100px] bg-gray-900 border-gray-800 text-white">
+
+        {/* Scrollable Container */}
+        <div className="space-y-6 max-h-[400px] overflow-y-auto">
           {videoMetaDatas.length > 0 ? (
             videoMetaDatas.map((videoMetaData, index) =>
               videoMetaData &&
               videoMetaData.thumbnail &&
               videoMetaData.title ? (
-                <CardContent
+                <div
                   key={index}
-                  className="flex items-center space-x-4"
+                  className="flex items-center space-x-6 p-4 bg-zinc-800 rounded-lg hover:bg-zinc-700 transition-all duration-300"
                 >
                   <Image
                     src={videoMetaData.thumbnail}
                     alt={videoMetaData.title}
                     width={100}
                     height={100}
-                    className="rounded-lg"
+                    className="rounded-lg shadow-lg transition-transform transform hover:scale-105"
                     onError={(e) => {
                       e.currentTarget.src = "/placeholder-image.jpg"; // Replace with an actual placeholder image path
                     }}
                   />
-                  <div className="flex flex-col space-y-2 items-start">
-                    <h2 className="text-lg font-semibold">
+                  <div className="flex flex-col space-y-1">
+                    <h2 className="text-lg font-semibold leading-tight">
                       {videoMetaData.title}
                     </h2>
-                    <p className="text-sm t text-white">Upvotes: {videoMetaData.upvotes}</p>
-                    <div className="flex flex-row space-x-2">
+                    <p className="text-sm text-gray-400">
+                      Upvotes: {videoMetaData.upvotes}
+                    </p>
+                    <div className="flex space-x-3 pt-2">
                       <Button
                         onClick={() =>
                           deleteFromRedis({
@@ -210,50 +219,59 @@ export default function StreamView({ userId }: { userId: string }) {
                             youtubeLink: videoMetaData.youtubeLink,
                           })
                         }
-                        className="w-14"
-                        variant="secondary"
                         aria-label="Remove from queue"
                       >
-                        <X />
+                        <X className="w-5 h-5" />
                       </Button>
                       <Button
-                        className="w-14"
-                        variant="secondary"
-                        aria-label="Move up in queue"
-                        onClick={ async() =>{
-                          const updatedVideos = await upVoteVideo(userId, videoMetaData.youtubeLink);
+                        onClick={async () => {
+                          const updatedVideos = await upVoteVideo(
+                            userId,
+                            videoMetaData.youtubeLink
+                          );
                           setVideoMetaDatas(updatedVideos);
                         }}
+                        aria-label="Move up in queue"
                       >
-                        <ChevronUp />
-                        
+                        <ChevronUp className="w-5 h-5" />
                       </Button>
-                      
                     </div>
                   </div>
-                </CardContent>
+                </div>
               ) : null
             )
           ) : (
-            <CardContent>
-              <p className="text-white">No upcoming songs in the queue</p>
-            </CardContent>
+            <div className="text-center">
+              <p className="text-gray-400">No upcoming songs in the queue</p>
+            </div>
           )}
-        </Card> */}
+        </div>
       </div>
-      {/* <div className="flex flex-col w-full md:w-auto p-4 space-y-2">
-        <Label className="font-bold font-mono mb-5 text-xl">
-          Currently Playing
-        </Label>
-        <Card className="w-full md:min-w-[400px] min-h-[200px] rounded bg-gray-900 border-gray-800 text-white">
-          <CardContent>
-            <div ref={playerRef}></div>
-          </CardContent>
-        </Card>
-        <Button onClick={playNext}>Play Next</Button>
-      </div> */}
+
+      
 
       {error && <div className="text-red-500 mt-2">{error}</div>}
     </div>
+    <div className="flex items-center justify-center">
+      <div className="w-full max-w-md p-6 space-y-6 bg-zinc-800 rounded-xl shadow-lg">
+        <Label className="block text-2xl font-bold text-center text-white">
+          Currently Playing
+        </Label>
+        <Card className="overflow-hidden rounded-lg bg-zinc-800 ">
+          <CardContent className="p-0">
+          <div ref={playerRef} className="aspect-video"></div>
+          </CardContent>
+        </Card>
+        <button
+          onClick={playNext}
+          className="w-full py-3 text-lg font-semibold text-zinc-900 bg-white rounded-md hover:bg-zinc-100 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-white focus:ring-opacity-50"
+        >
+          Play Next
+        </button>
+      </div>
+    </div>
+    
+    </>
+    
   );
 }
