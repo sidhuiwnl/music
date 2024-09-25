@@ -257,9 +257,11 @@ export default function StreamView({ userId }: { userId: string }) {
         <Label className="block text-2xl font-bold text-center text-white">
           Currently Playing
         </Label>
-        <Card className="overflow-hidden rounded-lg bg-zinc-800 ">
-          <CardContent className="p-0">
-          <div ref={playerRef} className="aspect-video"></div>
+        <Card className="overflow-hidden w-[400px] h-60 rounded-lg bg-zinc-800">
+          <CardContent className="p-0 h-full ">
+            <div ref={playerRef} className="w-full h-full">
+              {/* Render the audio player here */}
+            </div>
           </CardContent>
         </Card>
         <button
@@ -268,6 +270,7 @@ export default function StreamView({ userId }: { userId: string }) {
         >
           Play Next
         </button>
+      
       </div>
     </div>
     
