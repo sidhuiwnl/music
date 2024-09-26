@@ -14,7 +14,7 @@ export default async function Home() {
     <div className="relative w-screen h-screen  rounded-md bg-neutral-950 flex flex-col items-center justify-center antialiased">
      
       <div className="relative z-20  mx-auto p-4 ">
-        <h1 className="font-bold text-4xl mb-4">Hi, {user.username}!</h1>
+        {/* <h1 className="font-bold text-4xl mb-4">Hi, {user.username}!</h1> */}
         <Link className="relative z-10 text-lg md:text-7xl  bg-clip-text text-transparent bg-gradient-to-b from-neutral-200 to-neutral-600  text-center font-sans font-bold" href={"/musicboard"}>
         Let Your Audience Choose the Song
         </Link>
