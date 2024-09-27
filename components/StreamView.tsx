@@ -4,7 +4,7 @@
 import "react-lite-youtube-embed/dist/LiteYouTubeEmbed.css";
 
 import { Label } from "./ui/label";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef,useCallback } from "react";
 import { Card, CardContent } from "./ui/card";
 import { toast } from "sonner";
 import { Button } from "./ui/button";
@@ -85,6 +85,26 @@ export default function StreamView({ userId }: { userId: string }) {
     fetchingAllVideoFirst();
   }, [userId]);
 
+  const playNext = useCallback(async () => {
+    if (videoMetaDatas.length > 0) {
+      const sortedVideos = [...videoMetaDatas].sort(
+        (a, b) => b.upvotes - a.upvotes
+      );
+
+      const nextVideo = sortedVideos[0];
+
+      setCurrentlyPlaying(nextVideo);
+
+      const updatedQueue = await deleteTopVideoFromRedis(userId);
+
+      setVideoMetaDatas(updatedQueue);
+    } else {
+      setCurrentlyPlaying(null);
+    }
+  },[videoMetaDatas, userId]);
+
+  
+
   useEffect(() => {
     if (currentlyPlaying && playerRef.current) {
       if (!playerInstanceRef.current) {
@@ -109,25 +129,9 @@ export default function StreamView({ userId }: { userId: string }) {
         playerInstanceRef.current = null;
       };
     }
-  }, [currentlyPlaying]);
+  }, [currentlyPlaying,playNext]);
 
-  const playNext = async () => {
-    if (videoMetaDatas.length > 0) {
-      const sortedVideos = [...videoMetaDatas].sort(
-        (a, b) => b.upvotes - a.upvotes
-      );
-
-      const nextVideo = sortedVideos[0];
-
-      setCurrentlyPlaying(nextVideo);
-
-      const updatedQueue = await deleteTopVideoFromRedis(userId);
-
-      setVideoMetaDatas(updatedQueue);
-    } else {
-      setCurrentlyPlaying(null);
-    }
-  };
+  
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const input = e.target.value;
