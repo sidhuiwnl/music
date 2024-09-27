@@ -9,7 +9,7 @@ export const ContainerScroll = ({
   titleComponent: string | React.ReactNode;
   children: React.ReactNode;
 }) => {
-  const containerRef = useRef<any>(null);
+  const containerRef = useRef<HTMLDivElement>(null); // Specify HTMLDivElement type
   const { scrollYProgress } = useScroll({
     target: containerRef,
   });
@@ -54,7 +54,13 @@ export const ContainerScroll = ({
   );
 };
 
-export const Header = ({ translate, titleComponent }: any) => {
+export const Header = ({
+  translate,
+  titleComponent,
+}: {
+  translate: MotionValue<number>;
+  titleComponent: string | React.ReactNode;
+}) => {
   return (
     <motion.div
       style={{

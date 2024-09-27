@@ -42,7 +42,7 @@ export default function StreamView({ userId }: { userId: string }) {
 
   const [videoMetaDatas, setVideoMetaDatas] = useState<VideoMetaData[]>([]);
 
-  const [error, setError] = useState<string | null>(null);
+  
   const playerRef = useRef<HTMLDivElement>(null);
   const playerInstanceRef = useRef<YouTubePlayerInstance | null>(null);
   const [currentlyPlaying, setCurrentlyPlaying] =
@@ -260,7 +260,7 @@ export default function StreamView({ userId }: { userId: string }) {
           </div>
         </div>
 
-        {error && <div className="text-red-500 mt-2">{error}</div>}
+        
       </div>
       <div className="flex items-center justify-center">
         <div className="w-full max-w-md p-6 space-y-6 bg-zinc-800 rounded-xl shadow-lg">
