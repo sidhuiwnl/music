@@ -25,7 +25,7 @@ export default function FeatureSection() {
       <h1 className="text-3xl font-bold">Key Features</h1>
       <div className="flex justify-between mt-10 w-full max-w-4xl">
         {features.map((feature, index) => (
-          <div key={index} className="flex flex-col items-center mx-4">
+          <div key={index} className="flex flex-col items-center mx-4 space-y-3">
             <div className="text-4xl mb-2">{feature.svg}</div>
             <h2 className="text-xl font-semibold">{feature.title}</h2>
             <p className="text-gray-600 text-center">{feature.description}</p>
