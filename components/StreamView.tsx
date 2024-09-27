@@ -14,6 +14,7 @@ import {
   deleteFromRedis,
   deleteTopVideoFromRedis,
   upVoteVideo,
+  
 } from "@/lib/action";
 
 import Image from "next/image";
@@ -54,6 +55,7 @@ export default function StreamView({ userId }: { userId: string }) {
 
     try {
       const result = await addToRedis({ id: userId, youtubeLink: youtubeLink });
+      console.log(result)
       if (result.length > 0) {
         if (!currentlyPlaying) {
           setCurrentlyPlaying(result[0]);

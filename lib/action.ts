@@ -3,6 +3,8 @@
 import client from "./redis";
 import ytdl from "ytdl-core";
 
+
+
 export async function addToRedis({
   id,
   youtubeLink,
@@ -44,6 +46,9 @@ export async function addToRedis({
     .map((stream) => JSON.parse(stream))
     .sort((a, b) => b.upvotes - a.upvotes);
 }
+
+
+
 
 export async function deleteFromRedis({
   id,
