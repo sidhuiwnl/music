@@ -6,7 +6,9 @@ import { BackgroundBeams } from "@/components/ui/background-beams";
 import { ContainerScroll } from "@/components/ui/container-scroll-animation";
 import Image1 from "@/public/Image1.png";
 import Navbar from "@/components/Navbar";
-
+import FeatureSection from "@/components/FeatureSection";
+import Joining from "@/components/Joining";
+import Footer from "@/components/Footer";
 
 export default async function Home() {
   const { user } = await validateRequest();
@@ -46,6 +48,11 @@ export default async function Home() {
       </ContainerScroll>
      
     </div>
+    <div>
+      <FeatureSection/>
+      <Joining/>
+    </div>
+    <Footer/>
     <BackgroundBeams className="absolute inset-0 z-0" />
     </>
     
