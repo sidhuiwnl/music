@@ -26,11 +26,11 @@ export default async function Home() {
           <>
             <Link
               href="/musicboard"
-              className="relative z-10 text-lg sm:text-7xl md:text-7xl bg-clip-text text-transparent bg-gradient-to-b from-neutral-200 to-neutral-600 text-center font-sans font-bold"
+              className="relative z-10 font-extrabold tracking-tighter subpixel-antialiased sm:text-7xl md:text-7xl bg-clip-text text-transparent bg-gradient-to-b from-neutral-200 to-neutral-600 text-center font-sans "
             >
               Let Your Audience Choose the Song
             </Link>
-            <p className="text-neutral-500 max-w-lg mx-auto my-2 text-sm text-center relative z-10 mt-2 font-bold mb-4">
+            <p className="subpixel-antialiased font-semibold text-xl max-w-xl text-center tracking-tighter text-neutral-500  mx-auto my-2  relative z-10 mt-2 mb-4">
               Empower your audience to curate your music stream. Connect with
               fans like never before.
             </p>

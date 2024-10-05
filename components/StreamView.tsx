@@ -177,20 +177,20 @@ export default function StreamView({ userId }: { userId: string }) {
             ) : (
               <div className="text-center">
                 <Music className="mx-auto mb-2 text-zinc-700" size={24} />
-                <p className="text-zinc-700 text-sm">No video Added</p>
+                <p className="text-zinc-700 text-sm font-extrabold">No video Added</p>
               </div>
             )}
           </div>
 
           <button
             onClick={addtolocalRedis}
-            className="bg-white text-black font-bold py-2 px-4 rounded-md hover:bg-zinc-200 transition-colors"
+            className="bg-white text-black font-extrabold py-2 px-4 rounded-md hover:bg-zinc-200 transition-colors"
           >
             Add to queue
           </button>
         </div>
         <div className="flex flex-col w-full min-w-[400px] max-h-[400px] bg-gradient-to-br from-zinc-800 to-zinc-900 text-white p-6 rounded-xl shadow-lg">
-          <Label className="font-bold font-mono mb-6 text-2xl tracking-wider">
+          <Label className="font-extrabold text-2xl mb-5 tracking-tighter subpixel-antialiased text-white ">
             Queue Songs
           </Label>
 
@@ -258,7 +258,7 @@ export default function StreamView({ userId }: { userId: string }) {
               )
             ) : (
               <div className="text-center">
-                <p className="text-gray-400">No upcoming songs in the queue</p>
+                <p className="text-gray-400 font-extrabold">No upcoming songs in the queue</p>
               </div>
             )}
           </div>
@@ -268,17 +268,17 @@ export default function StreamView({ userId }: { userId: string }) {
       </div>
       <div className="flex items-center justify-center">
         <div className="w-full max-w-md p-6 space-y-6 bg-zinc-800 rounded-xl shadow-lg">
-          <Label className="block text-2xl font-bold text-center text-white">
+          <Label className="block font-extrabold text-2xl mb-5 tracking-tighter subpixel-antialiased text-center text-white">
             Currently Playing
           </Label>
-          <Card className="overflow-hidden w-[400px] h-60 rounded-lg bg-zinc-800">
+          <Card className="overflow-hidden w-[400px] h-60 rounded-lg bg-zinc-800 border-gray-800">
             <CardContent className="p-0 h-full ">
               <div ref={playerRef} className="w-full h-full"></div>
             </CardContent>
           </Card>
           <button
             onClick={playNext}
-            className="w-full py-3 text-lg font-semibold text-zinc-900 bg-white rounded-md hover:bg-zinc-100 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-white focus:ring-opacity-50"
+            className="w-full py-3 text-lg font-extrabold text-zinc-900 bg-white rounded-md hover:bg-zinc-100 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-white focus:ring-opacity-50"
           >
             Play Next
           </button>

@@ -7,7 +7,7 @@ export default async function SignOut() {
   return (
     
       <form action={logout}>
-        <button className="px-4 py-2 font-bold rounded-md border border-black bg-white text-black text-sm hover:shadow-[4px_4px_0px_0px_rgba(0,0,0)] transition duration-200">Sign out</button>
+        <button className="px-4 py-2 font-extrabold tracking-tighter rounded-md border border-black bg-white text-black text-sm hover:shadow-[4px_4px_0px_0px_rgba(0,0,0)] transition duration-200 subpixel-antialiased ">Sign out</button>
       </form>
   
   );
